@@ -32,7 +32,15 @@ How to run locally:
       npm install --dev
       npm install -g sequelize-cli
    * If you use postgres, before you can run migrations, you'll need to:
-      create database sharebandit;
+      $sudo -u postgres psql
+      postgres=# CREATE SCHEMA sharebandit;
+      postgres=# CREATE USER sharebandit PASSWORD 'sandra rocks';
+      postgres=# GRANT ALL on SCHEMA sharebandit TO sharebandit;
+      postgres=# GRANT ALL on ALL TABLES in SCHEMA sharebandit TO sharebandit;
+      postgres=# CREATE DATABASE sharebandit;
+      postgres=#\q
+
+      tip, if you want to check if the db access works: $psql -U sharebandit -h 127.0.0.1 -d sharebandit
 
 6. Run database migrations
    * sequelize db:migrate
@@ -75,5 +83,6 @@ Included in the codebase is the nginx/ directory that could help facilitate that
 on Ubuntu systems.
 
 1. Run (or run the commands yourself) nginx/install.sh as root
-2. Copy the sharebandit.conf file to /etc/nginx/sites-enabled/
-3. Install your SSL certificates at /etc/nginx/cert.* (or modify sharebandit.conf to map your server layout)
+2. Copy the sharebandit.conf file to /etc/nginx/sites-available and adjust for your org/domain
+3. cd /etc/nginx/sites-enabled;ln -s ../sites-available/sharebandit.conf
+4. Install your SSL certificates at /etc/nginx/cert.* (or modify sharebandit.conf to map your server layout)
