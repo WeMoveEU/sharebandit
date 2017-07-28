@@ -38,16 +38,32 @@
             jQuery(function($) {
               $('#scrape').click(function(){
                 $.getJSON("/admin/scrape/"+$("#input-url").val().replace(/(^\w+:|^)\/\//, ''),function(d){
-                  console.log(d);
                   if (d.is_error) alert ("can't fetch the page: "+d.err.message);
                   if (d.openGraph && d.openGraph.image) 
                     $("input[name='image_url[new]']").val(d.openGraph.image.url);
                   if (d.openGraph && d.openGraph.title) 
                     $("input[name='headline[new]']").val(d.openGraph.title);
-                  if (d.general && d.general.description) 
-                    $("textarea[name='text[new]']").val(d.general.description);
+                  if (d.general && d.general.description)
+                    $("textarea[name='text[new]']").val(d.general.description).keyup();
                 });
               });
+              if ($("#input-url").val() == "" && window.location.pathname.indexOf("/admin/edit/") === 0) {
+                $("#input-url").val(window.location.pathname.substr(12));
+                $('#scrape').click();
+              }
+              $('.og-desc').on("change keyup paste",function () {
+                var max = 250;
+                var len = $(this).val().length;
+                var charnum= $(this).siblings("label").find(".charnum");
+                if (len >= max) {
+                  $(this).parent().addClass("has-error").removeClass("has-success");
+                  charnum.text( len +' characters!!!');
+                } else {
+                  var char = max - len;
+                  charnum.text(char + ' characters left');
+                  $(this).parent().addClass("has-success").removeClass("has-error");
+                }
+              }).keyup();
             });
           </script>
         </span>
@@ -62,15 +78,15 @@
             <input type="hidden" name="id[{{variant.id}}]" value="{{variant.id}}" />
             <input type="hidden" name="version[{{variant.id}}]" value="{{variant.version}}" />
             <div class="form-group">
-              <label>Headline</label>
+              <label class="control-label">Headline</label>
               <input type="text" class="form-control" name="headline[{{variant.id}}]" value="{{variant.headline}}" />
             </div>
             <div class="form-group">
-              <label>Text</label>
-              <textarea class="form-control" name="text[{{variant.id}}]">{{variant.text}}</textarea>
+              <label class="control-label">Text&nbsp;<span class="charnum badge"></span></label>
+              <textarea class="form-control og-desc" name="text[{{variant.id}}]">{{variant.text}}</textarea>
             </div>
             <div class="form-group">
-              <label>Image URL</label>
+              <label class="control-label">Image URL</label>
               <input type="text" class="form-control" name="image_url[{{variant.id}}]" value="{{variant.image_url}}"/>
             </div>
           </div>
@@ -84,6 +100,9 @@
               </div>
               <div class="from-group">
                 <a class="btn btn-primary" href="https://developers.facebook.com/tools/debug/og/object/?q={{ encodeURIComponent(variant.shareUrl) }}">Refresh Facebook Cache</a>
+              </div>
+              <div class="from-group">
+                <a class="btn btn-default" target="twitter" href="https://cards-dev.twitter.com/validator?q={{ variant.shareUrl }}">Refresh Twitter Cache</a>
               </div>
               <div class="from-group">
                 <label>Share URL</label>

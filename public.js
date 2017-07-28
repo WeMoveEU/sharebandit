@@ -29,7 +29,24 @@ var init = function(app, schema, sequelize, config) {
             // just redirect skip
             // we can also, in theory cache it for facebook clients + abver
             if (! (req.params.domain in config.domain_whitelist)) {
-              return res.status(404).send("Not found");
+              if (req.params.abver in config.domain_whitelist) { // dealing with missing abver /r//:domain*
+                var domainInfo = config.domain_whitelist[req.params.abver];
+                var domain=req.params.abver+"/"+req.params.domain;
+                var pathname = req.params[0];
+                var proto = domainInfo.proto;
+                var forwardedQuery = _.clone(req.query);
+                forwardedQuery.abver = 0;
+
+                var furl = url.format({
+                  'protocol': proto,
+                  'host': domain,
+                  'pathname': decodeURIComponent(pathname),
+                  'query': forwardedQuery
+                });
+                res.redirect(furl);
+                return;
+              }
+              return res.status(404).send("Not found ;(" + req.params.abver);
             }
             res.vary('User-Agent')
             res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
@@ -71,7 +88,7 @@ var init = function(app, schema, sequelize, config) {
                       'description': 'basdfasdf',
                     });
                   } else {
-                    return res.status(404).send("Not found");
+                    return res.status(404).send("Not found.");
                   }
                 } else {
                   // console.log('FACEBOOK', req.originalUrl, furl);
